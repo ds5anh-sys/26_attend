@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR 출석 (리더기 겸용)</title>
+<title>QR 출석 (카메라 + 리더기)</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
@@ -15,7 +15,7 @@
 <audio id="successSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 <audio id="failSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
-<!-- 🔥 핵심 입력창 -->
+<!-- 🔥 리더기 입력창 -->
 <input 
   id="scannerInput" 
   placeholder="리더기 스캔 대기..." 
@@ -38,13 +38,22 @@ let bufferTimer = null;
 
 const input = document.getElementById("scannerInput");
 
-// 🔥 항상 포커스 유지 (핵심)
+// 🔥 포커스 유지
 function keepFocus(){
   input.focus();
 }
 setInterval(keepFocus, 500);
 
-// 🔥 플래시
+// 🔥 문자열 정리 (핵심)
+function cleanCode(raw){
+  if(!raw) return "";
+  return raw
+    .replace(/[\r\n]/g, '')   // 엔터 제거
+    .replace(/\s+/g, '')      // 공백 제거
+    .trim();
+}
+
+// 🔥 화면 효과
 function flash(color){
   const d=document.createElement("div");
   d.style.position="fixed";
@@ -59,24 +68,24 @@ function flash(color){
   setTimeout(()=>d.remove(),150);
 }
 
-// 🔥 리더기 입력 처리 (Enter 없어도 처리)
+// 🔥 리더기 자동 입력 처리 (Enter 없어도 OK)
 input.addEventListener("input", function(){
   clearTimeout(bufferTimer);
 
   bufferTimer = setTimeout(() => {
-    const code = input.value.trim();
+    const code = cleanCode(input.value);
     input.value = "";
 
     if(code){
       onScanSuccess(code);
     }
-  }, 100); // 🔥 입력 완료 판단
+  }, 100);
 });
 
-// 🔥 Enter 대응 (일부 리더기)
+// 🔥 Enter 대응
 input.addEventListener("keydown", function(e){
   if(e.key === "Enter"){
-    const code = input.value.trim();
+    const code = cleanCode(input.value);
     input.value = "";
 
     if(code){
@@ -93,11 +102,13 @@ function onScanSuccess(code){
   lastScan=code;
   lastTime=now;
 
-  fetch(API_URL+"?action=checkin&code="+code, {cache:"no-store"})
+  fetch(API_URL+"?action=checkin&code="+encodeURIComponent(code), {cache:"no-store"})
   .then(r=>r.text())
   .then(t=>{
     let d;
-    try{ d=JSON.parse(t);}catch{
+    try{
+      d=JSON.parse(t);
+    }catch{
       document.getElementById("result").innerText="⚠️ 서버 오류";
       flash("orange");
       return;
@@ -121,8 +132,11 @@ function onScanSuccess(code){
       flash("red");
     }
 
-    // 🔥 다시 포커스
-    input.focus();
+    input.focus(); // 🔥 다시 포커스
+  })
+  .catch(()=>{
+    document.getElementById("result").innerText="⚠️ 서버 연결 실패";
+    flash("red");
   });
 }
 
@@ -135,7 +149,7 @@ function startCamera(){
     onScanSuccess
   );
 
-  input.focus(); // 🔥 카메라 시작 후도 유지
+  input.focus();
 }
 </script>
 </body>
