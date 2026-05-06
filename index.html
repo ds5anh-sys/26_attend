@@ -47,12 +47,14 @@ setInterval(keepFocus, 500);
 // 🔥 문자열 정리 (핵심)
 function cleanCode(raw){
   if(!raw) return "";
-  return raw
-    .replace(/[\r\n]/g, '')   // 엔터 제거
-    .replace(/\s+/g, '')      // 공백 제거
-    .trim();
-}
 
+  // code= 값 추출
+  const match = raw.match(/code=([A-Za-z0-9]+)/);
+  if(match) return match[1].toUpperCase();
+
+  return raw.replace(/[^A-Z0-9]/g, '').toUpperCase();
+}
+  
 // 🔥 화면 효과
 function flash(color){
   const d=document.createElement("div");
