@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>초고속 스캐너 겸용 QR 출석 체크</title>
+<title>QR 출석 (리더기 겸용)</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
@@ -15,13 +15,15 @@
 <audio id="successSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 <audio id="failSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
+<!-- 🔥 핵심 입력창 -->
 <input 
   id="scannerInput" 
   placeholder="리더기 스캔 대기..." 
-  style="font-size:20px; padding:10px; width:250px; text-align:center;"
-  autofocus
+  style="font-size:20px; padding:10px; width:260px; text-align:center;"
 />
-  
+
+<br><br>
+
 <button onclick="startCamera()" style="font-size:20px; padding:10px;">
 📷 카메라 시작
 </button>
@@ -32,8 +34,17 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyKifEUDfdlQAB2fQ_u68Ch
 let scanner;
 let lastScan = "";
 let lastTime = 0;
+let bufferTimer = null;
 
-// 🚀 플래시 효과
+const input = document.getElementById("scannerInput");
+
+// 🔥 항상 포커스 유지 (핵심)
+function keepFocus(){
+  input.focus();
+}
+setInterval(keepFocus, 500);
+
+// 🔥 플래시
 function flash(color){
   const d=document.createElement("div");
   d.style.position="fixed";
@@ -48,24 +59,36 @@ function flash(color){
   setTimeout(()=>d.remove(),150);
 }
 
-// 🔥 리더기 입력 처리
-const input = document.getElementById("scannerInput");
+// 🔥 리더기 입력 처리 (Enter 없어도 처리)
+input.addEventListener("input", function(){
+  clearTimeout(bufferTimer);
 
+  bufferTimer = setTimeout(() => {
+    const code = input.value.trim();
+    input.value = "";
+
+    if(code){
+      onScanSuccess(code);
+    }
+  }, 100); // 🔥 입력 완료 판단
+});
+
+// 🔥 Enter 대응 (일부 리더기)
 input.addEventListener("keydown", function(e){
   if(e.key === "Enter"){
     const code = input.value.trim();
     input.value = "";
 
     if(code){
-      onScanSuccess(code); // 기존 함수 그대로 재사용
+      onScanSuccess(code);
     }
   }
 });
-  
-// 🚀 스캔
+
+// 🚀 공통 처리
 function onScanSuccess(code){
   const now = Date.now();
-  if(code===lastScan && now-lastTime<800) return; // 🔥 0.8초
+  if(code===lastScan && now-lastTime<800) return;
 
   lastScan=code;
   lastTime=now;
@@ -97,6 +120,9 @@ function onScanSuccess(code){
       failSound.play();
       flash("red");
     }
+
+    // 🔥 다시 포커스
+    input.focus();
   });
 }
 
@@ -105,9 +131,11 @@ function startCamera(){
   scanner=new Html5Qrcode("reader");
   scanner.start(
     { facingMode:"environment"},
-    { fps:20, qrbox:200 }, // 🔥 속도 핵심
+    { fps:20, qrbox:200 },
     onScanSuccess
   );
+
+  input.focus(); // 🔥 카메라 시작 후도 유지
 }
 </script>
 </body>
