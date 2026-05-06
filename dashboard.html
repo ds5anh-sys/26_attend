@@ -47,7 +47,7 @@ body {
 /* 최근 리스트 */
 #recentBox {
   position: fixed;
-  bottom: 80px;
+  bottom: 120px;
   width: 100%;
   text-align: center;
 }
@@ -63,7 +63,7 @@ body {
   line-height: 1.6;
 }
 
-/* 하단 요약 */
+/* 하단 */
 #footer {
   position: fixed;
   bottom: 0;
@@ -72,8 +72,34 @@ body {
   padding: 10px;
 }
 
-#summary {
-  font-size: 20px;
+/* 🔥 그래프 영역 */
+#barBox {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.barWrap {
+  width: 140px;
+}
+
+.barLabel {
+  font-size: 16px;
+  color: #cbd5f5;
+}
+
+.bar {
+  height: 12px;
+  background: #38bdf8;
+  margin-top: 6px;
+  border-radius: 6px;
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.count {
+  margin-top: 5px;
+  font-size: 16px;
 }
 </style>
 </head>
@@ -84,15 +110,29 @@ body {
 <div id="school"></div>
 <div id="time"></div>
 
-<!-- 🔥 최근 10명 -->
+<!-- 최근 출석 -->
 <div id="recentBox">
   <div id="recentTitle">최근 출석자</div>
   <div id="recentList"></div>
 </div>
 
-<!-- 하단 요약 -->
+<!-- 하단 그래프 -->
 <div id="footer">
-  <div id="summary"></div>
+
+  <div id="barBox">
+    <div class="barWrap">
+      <div class="barLabel">창원권 (5/8)</div>
+      <div class="bar" id="bar1"></div>
+      <div class="count" id="count1"></div>
+    </div>
+
+    <div class="barWrap">
+      <div class="barLabel">마산진해권 (5/11)</div>
+      <div class="bar" id="bar2"></div>
+      <div class="count" id="count2"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -125,15 +165,11 @@ function loadData(){
   .then(res => res.json())
   .then(data => {
 
-    // 요약
-    document.getElementById("summary").innerText =
-      `출석 ${data.checked} / ${data.total} (${data.rate}%)`;
-
     if (!data.list.length) return;
 
     const latest = data.list[0];
 
-    // 🔥 전광판 업데이트
+    // 전광판
     if (latest.name !== lastName) {
       lastName = latest.name;
 
@@ -150,10 +186,10 @@ function loadData(){
       nameEl.classList.add("flash");
     }
 
-    // 🔥 최근 10명 리스트
+    // 최근 10명 (전광판 제외)
     const listEl = document.getElementById("recentList");
     listEl.innerHTML = "";
-    // 전광판 중복 제거
+
     data.list.slice(1, 11).forEach(p => {
       const div = document.createElement("div");
       div.innerText =
@@ -161,6 +197,16 @@ function loadData(){
       listEl.appendChild(div);
     });
 
+    // 🔥 날짜별 그래프
+    const d1 = data.day1 || 0;
+    const d2 = data.day2 || 0;
+    const max = Math.max(d1, d2, 1);
+
+    document.getElementById("bar1").style.width = (d1/max*100) + "%";
+    document.getElementById("bar2").style.width = (d2/max*100) + "%";
+
+    document.getElementById("count1").innerText = d1 + "명";
+    document.getElementById("count2").innerText = d2 + "명";
   });
 }
 
