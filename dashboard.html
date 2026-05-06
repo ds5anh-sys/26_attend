@@ -110,13 +110,13 @@ body {
 <div id="footer">
   <div id="barBox">
     <div class="barWrap">
-      <div class="barLabel">창원권 (5/8)</div>
+      <div class="barLabel">창원권 (5월8일)</div>
       <div class="bar" id="bar1"></div>
       <div class="count" id="count1"></div>
     </div>
 
     <div class="barWrap">
-      <div class="barLabel">마산진해권 (5/11)</div>
+      <div class="barLabel">마산진해권 (5월11일)</div>
       <div class="bar" id="bar2"></div>
       <div class="count" id="count2"></div>
     </div>
@@ -129,8 +129,26 @@ const API_URL = "https://script.google.com/macros/s/AKfycbw6Op1r73gq8PGg6xqLFa45
 let lastName = "";
 
 // 🔥 시간 그대로 출력 (핵심 수정)
-function formatTime(t){
-  return t || "";
+function formatTime(t) {
+  if (!t) return "";
+
+  // 이미 MM-dd HH:mm 형태면 그대로 사용
+  if (typeof t === "string" && t.length <= 16 && t.includes("-") && t.includes(":")) {
+    return t;
+  }
+
+  const d = new Date(t);
+  if (isNaN(d)) return "";
+
+  // 🔥 한국시간 변환 (핵심)
+  const k = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+
+  const mm = String(k.getMonth() + 1).padStart(2, "0");
+  const dd = String(k.getDate()).padStart(2, "0");
+  const hh = String(k.getHours()).padStart(2, "0");
+  const min = String(k.getMinutes()).padStart(2, "0");
+
+  return `${mm}-${dd} ${hh}:${min}`;
 }
 
 function loadData(){
