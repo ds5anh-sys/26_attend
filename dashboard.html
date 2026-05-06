@@ -13,28 +13,24 @@ body {
   text-align: center;
 }
 
-/* 큰 이름 */
 #bigName {
   font-size: 80px;
   font-weight: bold;
   margin-top: 100px;
 }
 
-/* 학교 */
 #school {
   font-size: 40px;
   margin-top: 10px;
   color: #94a3b8;
 }
 
-/* 시간 */
 #time {
   font-size: 30px;
   margin-top: 10px;
   color: #38bdf8;
 }
 
-/* 애니메이션 */
 .flash {
   animation: pop 0.5s ease;
 }
@@ -44,12 +40,10 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* 최근 리스트 */
 #recentBox {
   position: fixed;
-  bottom: 120px;
+  bottom: 140px;
   width: 100%;
-  text-align: center;
 }
 
 #recentTitle {
@@ -60,27 +54,24 @@ body {
 
 #recentList {
   font-size: 18px;
-  line-height: 1.6;
 }
 
-/* 하단 */
 #footer {
   position: fixed;
   bottom: 0;
   width: 100%;
   background: #0f172a;
-  padding: 10px;
+  padding: 15px;
 }
 
-/* 🔥 그래프 영역 */
 #barBox {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 60px;
 }
 
 .barWrap {
-  width: 140px;
+  width: 180px;
 }
 
 .barLabel {
@@ -89,17 +80,21 @@ body {
 }
 
 .bar {
-  height: 12px;
-  background: #38bdf8;
-  margin-top: 6px;
-  border-radius: 6px;
+  height: 14px;
+  margin-top: 8px;
+  border-radius: 7px;
   width: 0%;
   transition: width 0.6s ease;
 }
 
+/* 🔥 색상 */
+#bar1 { background: #3b82f6; } /* 파랑 */
+#bar2 { background: #22c55e; } /* 초록 */
+
 .count {
-  margin-top: 5px;
-  font-size: 16px;
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -110,16 +105,14 @@ body {
 <div id="school"></div>
 <div id="time"></div>
 
-<!-- 최근 출석 -->
 <div id="recentBox">
   <div id="recentTitle">최근 출석자</div>
   <div id="recentList"></div>
 </div>
 
-<!-- 하단 그래프 -->
 <div id="footer">
-
   <div id="barBox">
+
     <div class="barWrap">
       <div class="barLabel">창원권 (5/8)</div>
       <div class="bar" id="bar1"></div>
@@ -131,12 +124,12 @@ body {
       <div class="bar" id="bar2"></div>
       <div class="count" id="count2"></div>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzM7XF_vw-MDoIGYsHQa1yGqIe6rg5JL6wEINtL5kJeJuAAV5tcd_vWwJUheKMgDxk/exec";
+const API_URL = "여기에_네_앱스크립트_URL";
 
 let lastName = "";
 
@@ -144,7 +137,7 @@ let lastName = "";
 function formatTime(t) {
   if (!t) return "";
 
-  if (typeof t === "string" && t.includes("-") && t.includes(":") && t.length <= 16) {
+  if (typeof t === "string" && t.includes("-") && t.includes(":")) {
     return t;
   }
 
@@ -159,7 +152,7 @@ function formatTime(t) {
   return `${mm}-${dd} ${hh}:${min}`;
 }
 
-// 데이터 로드
+// 🚀 데이터 로드
 function loadData(){
   fetch(API_URL + "?action=dashboard")
   .then(res => res.json())
@@ -173,44 +166,38 @@ function loadData(){
     if (latest.name !== lastName) {
       lastName = latest.name;
 
-      const nameEl = document.getElementById("bigName");
-      const schoolEl = document.getElementById("school");
-      const timeEl = document.getElementById("time");
+      bigName.innerText = latest.name;
+      school.innerText = latest.school;
+      time.innerText = "🕒 " + formatTime(latest.time);
 
-      nameEl.innerText = latest.name;
-      schoolEl.innerText = latest.school;
-      timeEl.innerText = "🕒 " + formatTime(latest.time);
-
-      nameEl.classList.remove("flash");
-      void nameEl.offsetWidth;
-      nameEl.classList.add("flash");
+      bigName.classList.remove("flash");
+      void bigName.offsetWidth;
+      bigName.classList.add("flash");
     }
 
-    // 최근 10명 (전광판 제외)
-    const listEl = document.getElementById("recentList");
-    listEl.innerHTML = "";
-
+    // 최근 10명
+    recentList.innerHTML = "";
     data.list.slice(1, 11).forEach(p => {
       const div = document.createElement("div");
-      div.innerText =
-        `${p.name} (${p.school}) - ${formatTime(p.time)}`;
-      listEl.appendChild(div);
+      div.innerText = `${p.name} (${p.school}) - ${formatTime(p.time)}`;
+      recentList.appendChild(div);
     });
 
-    // 🔥 날짜별 그래프
-    const d1 = data.day1 || 0;
-    const d2 = data.day2 || 0;
-    const max = Math.max(d1, d2, 1);
+    // 🔥 출석율 계산
+    const rate1 = data.day1Total ? Math.round(data.day1 / data.day1Total * 100) : 0;
+    const rate2 = data.day2Total ? Math.round(data.day2 / data.day2Total * 100) : 0;
 
-    document.getElementById("bar1").style.width = (d1/max*100) + "%";
-    document.getElementById("bar2").style.width = (d2/max*100) + "%";
+    // 🔥 그래프
+    bar1.style.width = rate1 + "%";
+    bar2.style.width = rate2 + "%";
 
-    document.getElementById("count1").innerText = d1 + "명";
-    document.getElementById("count2").innerText = d2 + "명";
+    // 🔥 텍스트 표시 (핵심)
+    count1.innerText = `창원권 ${rate1}% (${data.day1}/${data.day1Total})`;
+    count2.innerText = `마산진해권 ${rate2}% (${data.day2}/${data.day2Total})`;
+
   });
 }
 
-// 자동 갱신
 setInterval(loadData, 3000);
 loadData();
 </script>
