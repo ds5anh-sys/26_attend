@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생활기록부 연수 출석 현황</title>
+
+<style>
+body {
+  margin:0;
+  font-family: sans-serif;
+  background: #020617;
+  color: white;
+  text-align: center;
+}
+
+/* 큰 이름 */
+#bigName {
+  font-size: 80px;
+  font-weight: bold;
+  margin-top: 100px;
+}
+
+/* 학교 */
+#school {
+  font-size: 40px;
+  margin-top: 10px;
+  color: #94a3b8;
+}
+
+/* 시간 */
+#time {
+  font-size: 30px;
+  margin-top: 10px;
+  color: #38bdf8;
+}
+
+/* 애니메이션 */
+.flash {
+  animation: pop 0.5s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 최근 리스트 */
+#recentBox {
+  position: fixed;
+  bottom: 80px;
+  width: 100%;
+  text-align: center;
+}
+
+#recentTitle {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #cbd5f5;
+}
+
+#recentList {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* 하단 요약 */
+#footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #0f172a;
+  padding: 10px;
+}
+
+#summary {
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="bigName">대기중...</div>
+<div id="school"></div>
+<div id="time"></div>
+
+<!-- 🔥 최근 10명 -->
+<div id="recentBox">
+  <div id="recentTitle">최근 출석자</div>
+  <div id="recentList"></div>
+</div>
+
+<!-- 하단 요약 -->
+<div id="footer">
+  <div id="summary"></div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwY_DN4m6f6NSdTlNgGI04iHifqJ1FmnzDea_8czw-gVN8Mdf2kq7MdMU8w0Dq6dpcW/exec";
+
+let lastName = "";
+
+// 시간 포맷
+function formatTime(t) {
+  if (!t) return "";
+
+  if (typeof t === "string" && t.includes("-") && t.includes(":") && t.length <= 16) {
+    return t;
+  }
+
+  const d = new Date(t);
+  if (isNaN(d)) return "";
+
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const hh = String(d.getHours()).padStart(2,"0");
+  const min = String(d.getMinutes()).padStart(2,"0");
+
+  return `${mm}-${dd} ${hh}:${min}`;
+}
+
+// 데이터 로드
+function loadData(){
+  fetch(API_URL + "?action=dashboard")
+  .then(res => res.json())
+  .then(data => {
+
+    // 요약
+    document.getElementById("summary").innerText =
+      `출석 ${data.checked} / ${data.total} (${data.rate}%)`;
+
+    if (!data.list.length) return;
+
+    const latest = data.list[0];
+
+    // 🔥 전광판 업데이트
+    if (latest.name !== lastName) {
+      lastName = latest.name;
+
+      const nameEl = document.getElementById("bigName");
+      const schoolEl = document.getElementById("school");
+      const timeEl = document.getElementById("time");
+
+      nameEl.innerText = latest.name;
+      schoolEl.innerText = latest.school;
+      timeEl.innerText = "🕒 " + formatTime(latest.time);
+
+      nameEl.classList.remove("flash");
+      void nameEl.offsetWidth;
+      nameEl.classList.add("flash");
+    }
+
+    // 🔥 최근 10명 리스트
+    const listEl = document.getElementById("recentList");
+    listEl.innerHTML = "";
+    // 전광판 중복 제거
+    data.list.slice(1, 11).forEach(p => {
+      const div = document.createElement("div");
+      div.innerText =
+        `${p.name} (${p.school}) - ${formatTime(p.time)}`;
+      listEl.appendChild(div);
+    });
+
+  });
+}
+
+// 자동 갱신
+setInterval(loadData, 3000);
+loadData();
+</script>
+
+</body>
+</html>
