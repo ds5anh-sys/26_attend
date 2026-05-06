@@ -15,6 +15,13 @@
 <audio id="successSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 <audio id="failSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
+<input 
+  id="scannerInput" 
+  placeholder="리더기 스캔 대기..." 
+  style="font-size:20px; padding:10px; width:250px; text-align:center;"
+  autofocus
+/>
+  
 <button onclick="startCamera()" style="font-size:20px; padding:10px;">
 📷 카메라 시작
 </button>
@@ -41,6 +48,20 @@ function flash(color){
   setTimeout(()=>d.remove(),150);
 }
 
+// 🔥 리더기 입력 처리
+const input = document.getElementById("scannerInput");
+
+input.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    const code = input.value.trim();
+    input.value = "";
+
+    if(code){
+      onScanSuccess(code); // 기존 함수 그대로 재사용
+    }
+  }
+});
+  
 // 🚀 스캔
 function onScanSuccess(code){
   const now = Date.now();
