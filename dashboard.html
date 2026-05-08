@@ -141,7 +141,7 @@ function formatTime(t) {
   if (isNaN(d)) return "";
 
   // 🔥 한국시간 변환 (핵심)
-  const k = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  // const k = new Date(d.getTime() + 9 * 60 * 60 * 1000); 이거 때문에 9시간이 더해져서 보여짐
 
   const mm = String(k.getMonth() + 1).padStart(2, "0");
   const dd = String(k.getDate()).padStart(2, "0");
@@ -152,11 +152,12 @@ function formatTime(t) {
 }
 
 function loadData(){
-  fetch(API_URL + "?action=dashboard")
+ // fetch(API_URL + "?action=dashboard") 수정했음 최근 데이터
+  fetch(API_URL + "?action=dashboard&ts=" + Date.now())
   .then(res => res.json())
   .then(data => {
 
-    if (!data.list || !data.list.length) return;
+  //  if (!data.list || !data.list.length) return; 최근 출석이 없으면 함수자체가 종료됨
 
     const latest = data.list[0];
 
