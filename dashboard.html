@@ -159,17 +159,17 @@ function loadData(){
 
   //  if (!data.list || !data.list.length) return; 최근 출석이 없으면 함수자체가 종료됨
 
-    const latest = data.list[0];
+   // const latest = data.list[0];
+    const latest = (data.list && data.list.length) ? data.list[0] : null;
 
     // 전광판
-    if (latest.name !== lastName) {
-      lastName = latest.name;
+    
+    document.getElementById("bigName").innerText = latest?.name || "대기중...";
+    document.getElementById("school").innerText = latest?.school || "";
+    document.getElementById("time").innerText = latest?.time ? "🕒 " + formatTime(latest.time) : "";
 
-      document.getElementById("bigName").innerText = latest.name;
-      document.getElementById("school").innerText = latest.school;
-      document.getElementById("time").innerText = "🕒 " + formatTime(latest.time);
-    }
 
+    
     // 최근 10명
     const listEl = document.getElementById("recentList");
     listEl.innerHTML = "";
