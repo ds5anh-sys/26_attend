@@ -143,10 +143,10 @@ function formatTime(t) {
   // 🔥 한국시간 변환 (핵심)
   // const k = new Date(d.getTime() + 9 * 60 * 60 * 1000); 이거 때문에 9시간이 더해져서 보여짐
 
-  const mm = String(k.getMonth() + 1).padStart(2, "0");
-  const dd = String(k.getDate()).padStart(2, "0");
-  const hh = String(k.getHours()).padStart(2, "0");
-  const min = String(k.getMinutes()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
 
   return `${mm}-${dd} ${hh}:${min}`;
 }
