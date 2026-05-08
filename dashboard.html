@@ -160,6 +160,10 @@ function loadData(){
   //  if (!data.list || !data.list.length) return; 최근 출석이 없으면 함수자체가 종료됨
 
    // const latest = data.list[0];
+   // 프론트에서  데이터 정렬
+    data.list = (data.list || []).sort((a, b) => {
+        return new Date(b.time) - new Date(a.time);
+    });
     const latest = (data.list && data.list.length) ? data.list[0] : null;
 
     // 전광판
