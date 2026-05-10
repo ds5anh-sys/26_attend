@@ -59,18 +59,29 @@ setInterval(keepFocus, 500);
 
 // 🔥 문자열 정리
 function cleanCode(raw){
+
   if(!raw) return "";
 
   raw = raw.trim();
 
   // URL 형태 대응
   const match = raw.match(/code=([A-Za-z0-9]+)/i);
+
   if(match) {
     return match[1].toUpperCase();
   }
 
-  // 일반 문자열
-  return raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  // 🔥 영문/숫자만 남김
+  raw = raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+  // 🔥 영문1 + 숫자3 패턴 추출
+  const found = raw.match(/[A-Z][0-9]{3}/);
+
+  if(found){
+    return found[0];
+  }
+
+  return "";
 }
 
 // 🔥 화면 효과
