@@ -113,24 +113,25 @@ function resetInput(){
   }, 30);
 }
 
-// 🔥 리더기 Enter 입력 기반 처리 (가장 안정적)
-input.addEventListener("keydown", function(e){
 
-  if(e.key !== "Enter") return;
-
-  e.preventDefault();
+// 🔥 리더기 입력 처리(Enter 입력 기반 처리에서 문자열 추출구조)
+input.addEventListener("input", function(){
 
   // 🔥 처리중이면 무시
   if(isProcessing) return;
 
   const raw = input.value;
 
-  // 🔥 즉시 초기화
-  resetInput();
+  // 최소 4글자 이상일 때만 검사
+  if(raw.length < 4) return;
 
   const code = cleanCode(raw);
 
+  // 정상코드 없으면 계속 입력 대기
   if(!code) return;
+
+  // 🔥 즉시 입력창 비우기
+  resetInput();
 
   onScanSuccess(code);
 });
