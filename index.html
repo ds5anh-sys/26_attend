@@ -3,42 +3,40 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>연수 QR 출석 (카메라 + 리더기)</title>
+
 <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
 <body style="text-align:center; font-family:sans-serif;">
+
 <h2>연수 QR 출석 스캔</h2>
 
 <div id="reader" style="width:300px; margin:auto;"></div>
-<p id="result" style="font-size:22px; margin-top:20px; white-space:pre-line;"></p>
 
-<audio id="successSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="failSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+<p id="result"
+style="font-size:22px; margin-top:20px; white-space:pre-line;">
+대기중...
+</p>
 
-<!-- 🔥 리더기 입력창 -->
-<input 
-  id="scannerInput" 
-  type="text"
-  inputmode="latin"
-  autocomplete="off"
-  autocapitalize="off"
-  autocorrect="off"
-  spellcheck="false"
-  placeholder="리더기 스캔 대기..." 
-  style="font-size:20px; padding:10px; width:260px; text-align:center;"
-/>
+<audio id="successSound"
+src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+<audio id="failSound"
+src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
 <br><br>
 
-<button onclick="startCamera()" style="font-size:20px; padding:10px;">
+<button onclick="startCamera()"
+style="font-size:20px; padding:10px;">
 📷 카메라 시작
 </button>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbw6Op1r73gq8PGg6xqLFa45NFmB58ssRgPn25MOOi1eEJ09RQO6fC2G7Wb7Xwb8L-kb/exec";
+const API_URL =
+"https://script.google.com/macros/s/AKfycbw6Op1r73gq8PGg6xqLFa45NFmB58ssRgPn25MOOi1eEJ09RQO6fC2G7Wb7Xwb8L-kb/exec";
 
 // 🔥 출석일 설정
-const DAY = "1"; // 👉 2일차는 "2"
+const DAY = "1"; // 2일차는 "2"
 
 let scanner;
 
@@ -46,24 +44,17 @@ let scanner;
 let lastScan = "";
 let lastTime = 0;
 
-// 🔥 입력 잠금 (핵심)
+// 🔥 서버 처리중 잠금
 let isProcessing = false;
 
-const input = document.getElementById("scannerInput");
+// 🔥 리더기 입력 버퍼
+let keyBuffer = "";
 
-// 🔥 한글 입력 방지
-input.addEventListener("compositionstart", function(e){
-  e.preventDefault();
-});
-  
+// 🔥 마지막 입력 시간
+let lastKeyTime = 0;
 
-// 🔥 포커스 유지
-function keepFocus(){
-  if(document.activeElement !== input){
-    input.focus();
-  }
-}
-setInterval(keepFocus, 500);
+// 🔥 버퍼 초기화 시간(ms)
+const BUFFER_RESET = 200;
 
 // 🔥 문자열 정리
 function cleanCode(raw){
@@ -75,11 +66,11 @@ function cleanCode(raw){
   // URL 형태 대응
   const match = raw.match(/code=([A-Za-z0-9]+)/i);
 
-  if(match) {
-    return match[1].toUpperCase();
+  if(match){
+    raw = match[1];
   }
 
-  // 🔥 영문/숫자만 남김
+  // 영문/숫자만 남김
   raw = raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
 
   // 🔥 영문1 + 숫자3 패턴 추출
@@ -94,6 +85,7 @@ function cleanCode(raw){
 
 // 🔥 화면 효과
 function flash(color){
+
   const d = document.createElement("div");
 
   d.style.position = "fixed";
@@ -107,39 +99,52 @@ function flash(color){
 
   document.body.appendChild(d);
 
-  setTimeout(() => d.remove(), 150);
-}
-
-// 🔥 입력창 초기화 (핵심)
-function resetInput(){
-  input.value = "";
-  input.blur();
-
   setTimeout(() => {
-    input.value = "";
-    input.focus();
-  }, 30);
+    d.remove();
+  }, 150);
 }
 
+// 🔥 리더기 직접 입력 감지 (핵심)
+window.addEventListener("keydown", function(e){
 
-// 🔥 리더기 입력 처리(Enter 입력 기반 처리에서 문자열 추출구조)
-input.addEventListener("input", function(){
-
-  // 🔥 처리중이면 무시
+  // 처리중이면 무시
   if(isProcessing) return;
 
-  const raw = input.value;
+  const now = Date.now();
 
-  // 최소 4글자 이상일 때만 검사
-  if(raw.length < 4) return;
+  // 오래 멈췄으면 버퍼 초기화
+  if(now - lastKeyTime > BUFFER_RESET){
+    keyBuffer = "";
+  }
 
-  const code = cleanCode(raw);
+  lastKeyTime = now;
 
-  // 정상코드 없으면 계속 입력 대기
+  // Enter 무시
+  if(e.key === "Enter"){
+    e.preventDefault();
+    return;
+  }
+
+  // 1글자만 허용
+  if(e.key.length !== 1) return;
+
+  // 영문/숫자만 누적
+  if(/[A-Za-z0-9]/.test(e.key)){
+    keyBuffer += e.key.toUpperCase();
+  }
+
+  // 🔥 너무 길면 뒤 10글자만 유지
+  if(keyBuffer.length > 10){
+    keyBuffer = keyBuffer.slice(-10);
+  }
+
+  // 🔥 코드 추출
+  const code = cleanCode(keyBuffer);
+
   if(!code) return;
 
-  // 🔥 즉시 입력창 비우기
-  resetInput();
+  // 🔥 즉시 버퍼 초기화
+  keyBuffer = "";
 
   onScanSuccess(code);
 });
@@ -147,12 +152,12 @@ input.addEventListener("input", function(){
 // 🚀 공통 처리
 function onScanSuccess(code){
 
-  // 🔥 처리중이면 차단
+  // 처리중 차단
   if(isProcessing) return;
 
   const now = Date.now();
 
-  // 🔥 동일 QR 연속 방지
+  // 🔥 동일 QR 연속 차단
   if(code === lastScan && now - lastTime < 1000){
     return;
   }
@@ -179,6 +184,7 @@ function onScanSuccess(code){
 
     try{
       d = JSON.parse(t);
+
     }catch(err){
 
       document.getElementById("result").innerText =
@@ -189,6 +195,7 @@ function onScanSuccess(code){
       return;
     }
 
+    // ✅ 출석 성공
     if(d.status === "SUCCESS"){
 
       document.getElementById("result").innerText =
@@ -198,6 +205,7 @@ function onScanSuccess(code){
 
       flash("green");
 
+    // ⚠️ 이미 출석
     }else if(d.status === "ALREADY"){
 
       document.getElementById("result").innerText =
@@ -207,6 +215,7 @@ function onScanSuccess(code){
 
       flash("yellow");
 
+    // ❌ 미등록
     }else{
 
       document.getElementById("result").innerText =
@@ -227,10 +236,9 @@ function onScanSuccess(code){
   })
   .finally(() => {
 
-    // 🔥 처리 완료 후 재활성화
+    // 🔥 처리 완료 후 잠금 해제
     setTimeout(() => {
       isProcessing = false;
-      resetInput();
     }, 300);
   });
 }
@@ -255,9 +263,8 @@ function startCamera(){
       }
     }
   );
-
-  resetInput();
 }
 </script>
+
 </body>
 </html>
