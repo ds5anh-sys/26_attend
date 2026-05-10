@@ -18,6 +18,8 @@
 <!-- 🔥 리더기 입력창 -->
 <input 
   id="scannerInput" 
+  type="text"
+  inputmode="latin"
   autocomplete="off"
   autocapitalize="off"
   autocorrect="off"
@@ -48,6 +50,12 @@ let lastTime = 0;
 let isProcessing = false;
 
 const input = document.getElementById("scannerInput");
+
+// 🔥 한글 입력 방지
+input.addEventListener("compositionstart", function(e){
+  e.preventDefault();
+});
+  
 
 // 🔥 포커스 유지
 function keepFocus(){
