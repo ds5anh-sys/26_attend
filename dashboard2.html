@@ -2,96 +2,100 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026.교육과정 편성 운영 및 과정중심평가 통합 컨설팅 출석 현황</title>
+<title>2026. 교육과정 편성 운영 및 과정중심평가 통합 컨설팅 출석 현황</title>
 
 <style>
-body {
+body{
   margin:0;
-  font-family: sans-serif;
-  background: #020617;
-  color: white;
-  text-align: center;
+  font-family:sans-serif;
+  background:#020617;
+  color:white;
+  text-align:center;
 }
 
-#bigName {
-  font-size: 80px;
-  font-weight: bold;
-  margin-top: 100px;
+#bigName{
+  font-size:80px;
+  font-weight:bold;
+  margin-top:90px;
 }
 
-#school {
-  font-size: 40px;
-  margin-top: 10px;
-  color: #94a3b8;
+#school{
+  font-size:40px;
+  margin-top:10px;
+  color:#94a3b8;
 }
 
-#time {
-  font-size: 30px;
-  margin-top: 10px;
-  color: #38bdf8;
+#time{
+  font-size:30px;
+  margin-top:10px;
+  color:#38bdf8;
 }
 
-.flash {
-  animation: pop 0.5s ease;
+#recentBox{
+  position:fixed;
+  bottom:180px;
+  width:100%;
 }
 
-@keyframes pop {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+#recentTitle{
+  font-size:22px;
+  margin-bottom:12px;
+  font-weight:bold;
 }
 
-#recentBox {
-  position: fixed;
-  bottom: 120px;
-  width: 100%;
+#recentList{
+  font-size:18px;
+  line-height:1.7;
 }
 
-#recentTitle {
-  font-size: 20px;
-  margin-bottom: 10px;
+#footer{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#0f172a;
+  padding:20px 30px;
+  box-sizing:border-box;
 }
 
-#recentList {
-  font-size: 18px;
-  line-height: 1.6;
+#tableBox{
+  width:90%;
+  margin:auto;
+  border-collapse:collapse;
 }
 
-#footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #0f172a;
-  padding: 20px;
+.dayRow{
+  margin-bottom:14px;
 }
 
-#barBox {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
+.dayLabel{
+  text-align:left;
+  font-size:18px;
+  margin-bottom:6px;
+  font-weight:bold;
 }
 
-.barWrap {
-  width: 500px;
+.barBg{
+  width:100%;
+  height:18px;
+  background:#1e293b;
+  border-radius:10px;
+  overflow:hidden;
 }
 
-.barLabel {
-  font-size: 16px;
+.bar{
+  height:100%;
+  width:0%;
+  transition:width 0.6s;
 }
 
-.bar {
-  height: 14px;
-  margin-top: 6px;
-  border-radius: 6px;
-  width: 0%;
-  transition: width 0.6s;
-}
+#bar1{ background:#3b82f6; }
+#bar2{ background:#22c55e; }
+#bar3{ background:#f59e0b; }
 
-#bar1 { background: #3b82f6; } /* 파랑 */
-#bar2 { background: #22c55e; } /* 초록 */
-
-.count {
-  margin-top: 6px;
-  font-size: 16px;
+.count{
+  margin-top:6px;
+  font-size:17px;
+  text-align:right;
 }
 </style>
 </head>
@@ -108,50 +112,71 @@ body {
 </div>
 
 <div id="footer">
-  <div id="barBox">
-    <div class="barWrap">
-      <div class="barLabel">창원권 (5월8일)</div>
+
+  <!-- 1일차 -->
+  <div class="dayRow">
+    <div class="dayLabel">창원권 (5월 19일 화요일)</div>
+
+    <div class="barBg">
       <div class="bar" id="bar1"></div>
-      <div class="count" id="count1"></div>
     </div>
 
-    <div class="barWrap">
-      <div class="barLabel">마산진해권 (5월11일)</div>
-      <div class="bar" id="bar2"></div>
-      <div class="count" id="count2"></div>
-    </div>
+    <div class="count" id="count1"></div>
   </div>
+
+  <!-- 2일차 -->
+  <div class="dayRow">
+    <div class="dayLabel">마산진해권 (5월 20일 수요일)</div>
+
+    <div class="barBg">
+      <div class="bar" id="bar2"></div>
+    </div>
+
+    <div class="count" id="count2"></div>
+  </div>
+
+  <!-- 3일차 -->
+  <div class="dayRow">
+    <div class="dayLabel">특별운영일 (5월 22일 금요일)</div>
+
+    <div class="barBg">
+      <div class="bar" id="bar3"></div>
+    </div>
+
+    <div class="count" id="count3"></div>
+  </div>
+
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzf5VDhh9G_s61Vr83U32t79Xsxx4PLt47FaBn5Yf2QOuXT9qBwPS8r2mVkvmIGoCNxVg/exec";
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzf5VDhh9G_s61Vr83U32t79Xsxx4PLt47FaBn5Yf2QOuXT9qBwPS8r2mVkvmIGoCNxVg/exec";
 
-let lastName = "";
+// 🔥 시간 표시
+function formatTime(t){
 
-// 🔥 시간 그대로 출력 (핵심 수정)
-function formatTime(t) {
-  if (!t) return "";
+  if(!t) return "";
 
-  // 이미 MM-dd HH:mm 형태면 그대로 사용
-  if (typeof t === "string" && t.length <= 16 && t.includes("-") && t.includes(":")) {
+  if(typeof t === "string" &&
+     t.length <= 16 &&
+     t.includes("-") &&
+     t.includes(":")){
     return t;
   }
 
   const d = new Date(t);
-  if (isNaN(d)) return "";
 
-  // 🔥 한국시간 변환 (핵심)
-  // const k = new Date(d.getTime() + 9 * 60 * 60 * 1000); 이거 때문에 9시간이 더해져서 보여짐
+  if(isNaN(d)) return "";
 
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const hh = String(d.getHours()).padStart(2,"0");
+  const min = String(d.getMinutes()).padStart(2,"0");
 
   return `${mm}-${dd} ${hh}:${min}`;
 }
 
-  // 🔥 여기 추가
+// 🔥 정렬용 시간 변환
 function parseTime(t){
 
   if(!t) return 0;
@@ -162,7 +187,8 @@ function parseTime(t){
     return d.getTime();
   }
 
-  const match = t.match(/(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  const match =
+    t.match(/(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
 
   if(!match) return 0;
 
@@ -173,72 +199,113 @@ function parseTime(t){
   const hour = Number(match[3]);
   const min = Number(match[4]);
 
-  return new Date(year, month, day, hour, min).getTime();
+  return new Date(
+    year,
+    month,
+    day,
+    hour,
+    min
+  ).getTime();
 }
-  
+
 function loadData(){
- // fetch(API_URL + "?action=dashboard") 수정했음 최근 데이터
+
   fetch(API_URL + "?action=dashboard&ts=" + Date.now())
   .then(res => res.json())
   .then(data => {
 
-  //  if (!data.list || !data.list.length) return; 최근 출석이 없으면 함수자체가 종료됨
+    // 🔥 최신순 정렬
+    data.list = (data.list || []).sort((a,b)=>{
+      return parseTime(b.time) - parseTime(a.time);
+    });
 
-   // const latest = data.list[0];
-   // 프론트에서  데이터 정렬
-  // 🔥 안전한 시간 정렬
-  data.list = (data.list || []).sort((a, b) => {
+    const latest =
+      (data.list && data.list.length)
+      ? data.list[0]
+      : null;
 
-  const ta = parseTime(a.time);
-  const tb = parseTime(b.time);
+    // 🔥 전광판
+    document.getElementById("bigName").innerText =
+      latest?.name || "대기중...";
 
-  return tb - ta;
-  });
-    const latest = (data.list && data.list.length) ? data.list[0] : null;
+    document.getElementById("school").innerText =
+      latest?.school || "";
 
-    // 전광판
-    
-    document.getElementById("bigName").innerText = latest?.name || "대기중...";
-    document.getElementById("school").innerText = latest?.school || "";
-    document.getElementById("time").innerText = latest?.time ? "🕒 " + formatTime(latest.time) : "";
+    document.getElementById("time").innerText =
+      latest?.time
+      ? "🕒 " + formatTime(latest.time)
+      : "";
 
+    // 🔥 최근 출석자
+    const listEl =
+      document.getElementById("recentList");
 
-    
-    // 최근 10명
-    const listEl = document.getElementById("recentList");
     listEl.innerHTML = "";
 
-    data.list.slice(1, 9).forEach(p => {
+    data.list.slice(1,9).forEach(p => {
+
       const div = document.createElement("div");
+
       div.innerText =
         `${p.name} (${p.school}) - ${formatTime(p.time)}`;
+
       listEl.appendChild(div);
     });
 
-    // 🔥 안전값 처리
+    // 🔥 출석 데이터
     const day1 = data.day1 || 0;
     const day2 = data.day2 || 0;
+    const day3 = data.day3 || 0;
+
     const day1Total = data.day1Total || 0;
     const day2Total = data.day2Total || 0;
+    const day3Total = data.day3Total || 0;
 
-    // 🔥 출석율 계산
-    const rate1 = day1Total ? Math.round(day1 / day1Total * 100) : 0;
-    const rate2 = day2Total ? Math.round(day2 / day2Total * 100) : 0;
+    // 🔥 출석률 계산
+    const rate1 =
+      day1Total
+      ? Math.round(day1/day1Total*100)
+      : 0;
 
-    // 🔥 그래프 길이 (비율 기반)
-    document.getElementById("bar1").style.width = rate1 + "%";
-    document.getElementById("bar2").style.width = rate2 + "%";
+    const rate2 =
+      day2Total
+      ? Math.round(day2/day2Total*100)
+      : 0;
 
-    // 🔥 텍스트 표시 (핵심)
+    const rate3 =
+      day3Total
+      ? Math.round(day3/day3Total*100)
+      : 0;
+
+    // 🔥 그래프 길이
+    document.getElementById("bar1").style.width =
+      rate1 + "%";
+
+    document.getElementById("bar2").style.width =
+      rate2 + "%";
+
+    document.getElementById("bar3").style.width =
+      rate3 + "%";
+
+    // 🔥 텍스트
     document.getElementById("count1").innerText =
-      `창원권 ${rate1}% (${day1}/${day1Total})`;
+      `${rate1}% (${day1}/${day1Total})`;
 
     document.getElementById("count2").innerText =
-      `마산진해권 ${rate2}% (${day2}/${day2Total})`;
+      `${rate2}% (${day2}/${day2Total})`;
+
+    document.getElementById("count3").innerText =
+      `${rate3}% (${day3}/${day3Total})`;
+
+  })
+  .catch(err=>{
+    console.log(err);
   });
 }
 
+// 🔥 3초마다 자동 갱신
 setInterval(loadData, 3000);
+
 loadData();
 </script>
 
